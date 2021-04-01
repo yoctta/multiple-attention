@@ -256,37 +256,3 @@ def load_state(net,ckpt):
             nd[i]=ckpt[i]
     net.load_state_dict(nd,strict=False)
 
-class netrunc(nn.Module):
-    def __init__(self, net='xception',feature_layer='b3',num_classes=2,dropout_rate=0.5, pretrained=False):
-        super().__init__()
-        self.num_classes = num_classes
-        if 'xception' in net:
-            self.net=xception(num_classes,escape=feature_layer)
-        elif net.split('-')[0]=='efficientnet':
-            self.net=EfficientNet.from_pretrained(net,advprop=True, num_classes=num_classes,escape=feature_layer)
-        self.feature_layer=feature_layer
-        with torch.no_grad():
-            layers = self.net(torch.zeros(1,3,100,100))
-        num_features=layers[self.feature_layer].shape[1]
-        if pretrained:
-            a=torch.load(pretrained,map_location='cpu')
-            keys={i:a['state_dict'][i] for i in a.keys() if i.startswith('net')}
-            if not keys:
-                keys=a['state_dict']
-            load_state(self.net,keys)
-        self.pooling=nn.AdaptiveAvgPool2d(1)
-        self.texture_enhance=Texture_Enhance(num_features)
-        self.num_features=self.texture_enhance.output_features
-        self.fc=nn.Linear(self.num_features,self.num_classes)
-        self.dropout=nn.Dropout(dropout_rate)
-
-
-    def forward(self, x):
-        layers = self.net(x)
-        feature_maps = layers[self.feature_layer]
-        feature_maps=self.texture_enhance(feature_maps,(feature_maps.shape[2]//4,feature_maps.shape[3]//4))[0]
-        x=self.pooling(feature_maps)
-        x = x.flatten(start_dim=1)
-        x=self.dropout(x)
-        x=self.fc(x)
-        return x
