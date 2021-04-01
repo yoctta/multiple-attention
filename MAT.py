@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from models.xception import xception
 from models.efficientnet2 import EfficientNet as EfficientNet2
 from models.efficientnet import EfficientNet
+from utils import cont_grad
 import kornia
 class AttentionMap(nn.Module):
 
@@ -85,7 +86,7 @@ class Texture_Enhance(nn.Module):
         feature_maps_d=F.adaptive_avg_pool2d(feature_maps,attention_size)
         if feature_maps.size(2)>feature_maps_d.size(2):
             feature_maps=feature_maps-F.interpolate(feature_maps_d,(feature_maps.shape[2],feature_maps.shape[3]),mode='nearest')
-        feature_maps_d=self.conv_d(feature_maps_d.detach())
+        feature_maps_d=self.conv_d(cont_grad(feature_maps_d))
         B,N,H,W=feature_maps.shape
         attention_maps=F.interpolate(attention_maps,(H,W),mode='bilinear',align_corners=True)
         attention_maps=(F.tanh(attention_maps)).unsqueeze(2)
