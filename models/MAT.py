@@ -172,7 +172,7 @@ class Auxiliary_Loss_v2(nn.Module):
         for j in range(M):
             for k in range(j+1,M):
                 inter_class_loss+=F.relu(self.margin-torch.dist(fcts[j],fcts[k]),inplace=False)
-        inter_calss_loss=inter_class_loss/M/self.alpha
+        inter_class_loss=inter_class_loss/M/self.alpha
         #fmd=attentions.flatten(2)
         #diverse_loss=torch.mean(F.relu(F.cosine_similarity(fmd.unsqueeze(1),fmd.unsqueeze(2),dim=3)-self.margin,inplace=True)*(1-torch.eye(M,device=attentions.device)))
         return intra_class_loss+inter_class_loss,feature_matrix
