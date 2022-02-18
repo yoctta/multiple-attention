@@ -363,7 +363,7 @@ class netrunc(nn.Module):
     def forward(self, x):
         layers = self.net(x)
         feature_maps = layers[self.feature_layer]
-        feature_maps=self.texture_enhance(feature_maps,(0.2,0.2))
+        feature_maps, _=self.texture_enhance(feature_maps,(0.2,0.2))
         x=self.pooling(feature_maps)
         x = x.flatten(start_dim=1)
         x=self.dropout(x)
